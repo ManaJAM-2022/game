@@ -14,8 +14,8 @@ export default class GameScene extends Phaser.Scene {
   private static readonly SCALE = 2;
   static readonly TILE_SIZE = this.SCALE * 16;
 
-  private gridControls: GridControls;
-  private gridPhysics: GridPhysics;
+  private gridControls?: GridControls;
+  private gridPhysics?: GridPhysics;
 
   constructor() {
     super('GameScene');
@@ -67,8 +67,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   public update(_time: number, delta: number) {
-    this.gridControls.update();
-    this.gridPhysics.update(delta);
+    this.gridControls?.update();
+    this.gridPhysics?.update(delta);
   }
 
   private createPlayerAnimation(

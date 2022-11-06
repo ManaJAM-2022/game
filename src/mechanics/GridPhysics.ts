@@ -9,12 +9,13 @@ export class GridPhysics {
   private lastMovementIntent = Direction.NONE;
 
   private movementDirectionVectors: {
-    [key in Direction]?: Phaser.Math.Vector2;
+    [key in Direction]: Phaser.Math.Vector2;
   } = {
     [Direction.UP]: Phaser.Math.Vector2.UP,
     [Direction.DOWN]: Phaser.Math.Vector2.DOWN,
     [Direction.LEFT]: Phaser.Math.Vector2.LEFT,
     [Direction.RIGHT]: Phaser.Math.Vector2.RIGHT,
+    [Direction.NONE]: Phaser.Math.Vector2.ZERO,
   };
 
   private tileSizePixelsWalked: number = 0;
