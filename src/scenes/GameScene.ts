@@ -48,7 +48,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Player
     const playerSprite = this.add.sprite(0, 0, 'player');
-    playerSprite.setDepth(0);
+    playerSprite.setDepth(5);
     playerSprite.scale = GameScene.SCALE;
     this.cameras.main.startFollow(playerSprite);
     this.cameras.main.roundPixels = true;
@@ -56,7 +56,7 @@ export default class GameScene extends Phaser.Scene {
     const player = new Player(playerSprite, new Phaser.Math.Vector2(5, 5));
 
     // Movement
-    this.gridPhysics = new GridPhysics(player);
+    this.gridPhysics = new GridPhysics(player, officeTilemap);
     this.gridControls = new GridControls(this.input, this.gridPhysics);
 
     // Character animations

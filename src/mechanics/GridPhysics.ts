@@ -19,7 +19,10 @@ export class GridPhysics {
 
   private tileSizePixelsWalked: number = 0;
 
-  constructor(private player: Player) {}
+  constructor(
+    private player: Player,
+    private tileMap: Phaser.Tilemaps.Tilemap
+  ) {}
 
   update(delta: number): void {
     if (this.isMoving()) {
@@ -31,8 +34,10 @@ export class GridPhysics {
 
   movePlayer(direction: Direction): void {
     this.lastMovementIntent = direction;
-
-    if (!this.isMoving()) {
+    if (this.isMoving()) return;
+    if (this.isBlockingDirection(direction)) {
+      this.player.stopAnimation(direction);
+    } else {
       this.startMoving(direction);
     }
   }
@@ -45,25 +50,27 @@ export class GridPhysics {
     this.player.startAnimation(direction);
 
     this.movementDirection = direction;
+
+    this.updatePlayerTilePosition();
   }
 
   private stopMoving(): void {
-    this.player.stopAnimation();
-    
+    this.player.stopAnimation(this.movementDirection);
+
     this.movementDirection = Direction.NONE;
   }
 
   private updatePlayerPosition(delta: number) {
     const pixelsToWalkThisUpdate = this.getPixelsToWalkThisUpdate(delta);
 
-    if (
-      this.willCrossTileBorderThisUpdate(pixelsToWalkThisUpdate) &&
-      !this.shouldContinueMoving()
-    ) {
+    if (!this.willCrossTileBorderThisUpdate(pixelsToWalkThisUpdate)) {
+      this.movePlayerSprite(pixelsToWalkThisUpdate);
+    } else if (this.shouldContinueMoving()) {
+      this.movePlayerSprite(pixelsToWalkThisUpdate);
+      this.updatePlayerTilePosition();
+    } else {
       this.movePlayerSprite(GameScene.TILE_SIZE - this.tileSizePixelsWalked);
       this.stopMoving();
-    } else {
-      this.movePlayerSprite(pixelsToWalkThisUpdate);
     }
   }
 
@@ -89,11 +96,46 @@ export class GridPhysics {
   }
 
   private shouldContinueMoving(): boolean {
-    return this.movementDirection == this.lastMovementIntent;
+    return (
+      this.movementDirection == this.lastMovementIntent &&
+      !this.isBlockingDirection(this.lastMovementIntent)
+    );
   }
 
   private getPixelsToWalkThisUpdate(delta: number): number {
     const deltaInSeconds = delta / 1000;
     return this.speedPixelsPerSecond * deltaInSeconds;
+  }
+
+  private updatePlayerTilePosition() {
+    this.player.setTilePosition(
+      this.player
+        .getTilePosition()
+        .add(this.movementDirectionVectors[this.movementDirection])
+    );
+  }
+
+  private isBlockingDirection(direction: Direction): boolean {
+    return this.hasBlockingTile(this.tilePosInDirection(direction));
+  }
+
+  private tilePosInDirection(direction: Direction): Phaser.Math.Vector2 {
+    return this.player
+      .getTilePosition()
+      .add(this.movementDirectionVectors[direction]);
+  }
+
+  private hasBlockingTile(pos: Phaser.Math.Vector2): boolean {
+    if (this.hasNoTile(pos)) return true;
+    return this.tileMap.layers.some((layer) => {
+      const tile = this.tileMap.getTileAt(pos.x, pos.y, false, layer.name);
+      return tile && tile.properties.collides;
+    });
+  }
+
+  private hasNoTile(pos: Phaser.Math.Vector2): boolean {
+    return !this.tileMap.layers.some((layer) =>
+      this.tileMap.hasTileAt(pos.x, pos.y, layer.name)
+    );
   }
 }

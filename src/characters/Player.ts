@@ -30,13 +30,20 @@ export class Player {
     this.sprite.anims.play(direction);
   }
 
-  stopAnimation() {
+  stopAnimation(direction: Direction) {
     // This logic is supposed to reset the animation to the standing position
     // BUG: standing position for up/down animations is not in this row of the sprite
-    if (this.sprite.anims.currentAnim) {
-      const standingFrame = this.sprite.anims.currentAnim.frames[5].frame.name;
-      this.sprite.anims.stop();
-      this.sprite.setFrame(standingFrame);
-    }
+    const animationManager = this.sprite.anims.animationManager;
+    const standingFrame = animationManager.get(direction).frames[1].frame.name;
+    this.sprite.anims.stop();
+    this.sprite.setFrame(standingFrame);
+  }
+
+  getTilePosition(): Phaser.Math.Vector2 {
+    return this.tilePos.clone();
+  }
+
+  setTilePosition(tilePosition: Phaser.Math.Vector2): void {
+    this.tilePos = tilePosition.clone();
   }
 }
