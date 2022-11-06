@@ -1,7 +1,5 @@
 import { Direction, GridEngine, GridEngineConfig } from 'grid-engine';
-import Phaser, { LEFT } from 'phaser';
-
-import { Player } from '../characters/Player';
+import Phaser from 'phaser';
 
 const tilesetKey: string = 'base_tiles';
 
@@ -11,10 +9,6 @@ const tilesetName: string = 'Room';
 export default class GameScene extends Phaser.Scene {
   private static readonly SCALE = 2;
   static readonly TILE_SIZE = this.SCALE * 16;
-
-  //private gridControls?: GridControls;
-  //private gridPhysics?: GridPhysics;
-
   private gridEngine?: GridEngine;
 
   constructor() {
@@ -37,6 +31,8 @@ export default class GameScene extends Phaser.Scene {
         frameHeight: 32,
       }
     );
+
+    this.load.audio('route1', ['audio/route1.mp3']);
   }
 
   create() {
@@ -74,6 +70,9 @@ export default class GameScene extends Phaser.Scene {
     };
 
     this.gridEngine?.create(officeTilemap, gridEngineConfig);
+
+    const music = this.sound.add('route1', { loop: true });
+    music.play();
   }
 
   public update(_time: number) {
