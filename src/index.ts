@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import config from './config';
-import WelcomeScene from './scenes/welcome';
+import BossRoom from './scenes/boss_room';
 
 new Phaser.Game(
   Object.assign(config, {
-    scene: [WelcomeScene],
+    scene: [BossRoom],
   })
 );
