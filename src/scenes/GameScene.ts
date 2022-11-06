@@ -1,9 +1,7 @@
-import Phaser from 'phaser';
+import { Direction, GridEngine, GridEngineConfig } from 'grid-engine';
+import Phaser, { LEFT } from 'phaser';
 
 import { Player } from '../characters/Player';
-import { Direction } from '../mechanics/Direction';
-import { GridControls } from '../mechanics/GridControls';
-import { GridPhysics } from '../mechanics/GridPhysics';
 
 const tilesetKey: string = 'base_tiles';
 
@@ -14,8 +12,10 @@ export default class GameScene extends Phaser.Scene {
   private static readonly SCALE = 2;
   static readonly TILE_SIZE = this.SCALE * 16;
 
-  private gridControls?: GridControls;
-  private gridPhysics?: GridPhysics;
+  //private gridControls?: GridControls;
+  //private gridPhysics?: GridPhysics;
+
+  private gridEngine?: GridEngine;
 
   constructor() {
     super('GameScene');
@@ -29,10 +29,14 @@ export default class GameScene extends Phaser.Scene {
 
     this.load.tilemapTiledJSON('office-map', 'maps/office.json');
 
-    this.load.spritesheet('player', 'assets/Characters_free/Adam_16x16.png', {
-      frameWidth: 16,
-      frameHeight: 32,
-    });
+    this.load.spritesheet(
+      'player',
+      'assets/Characters_free/Adam_run_16x16.png',
+      {
+        frameWidth: 16,
+        frameHeight: 32,
+      }
+    );
   }
 
   create() {
@@ -53,38 +57,35 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(playerSprite);
     this.cameras.main.roundPixels = true;
 
-    const player = new Player(playerSprite, new Phaser.Math.Vector2(5, 5));
+    const gridEngineConfig: GridEngineConfig = {
+      characters: [
+        {
+          id: 'player',
+          sprite: playerSprite,
+          walkingAnimationMapping: {
+            right: { leftFoot: 1, standing: 2, rightFoot: 3 },
+            up: { leftFoot: 6, standing: 7, rightFoot: 10 },
+            left: { leftFoot: 13, standing: 14, rightFoot: 15 },
+            down: { leftFoot: 19, standing: 20, rightFoot: 22 },
+          },
+          startPosition: { x: 8, y: 8 },
+        },
+      ],
+    };
 
-    // Movement
-    this.gridPhysics = new GridPhysics(player, officeTilemap);
-    this.gridControls = new GridControls(this.input, this.gridPhysics);
-
-    // Character animations
-    this.createPlayerAnimation(Direction.RIGHT, 2 * 24, 2 * 24 + 5);
-    this.createPlayerAnimation(Direction.UP, 2 * 24 + 6, 2 * 24 + 11);
-    this.createPlayerAnimation(Direction.LEFT, 2 * 24 + 12, 2 * 24 + 17);
-    this.createPlayerAnimation(Direction.DOWN, 2 * 24 + 18, 2 * 24 + 23);
+    this.gridEngine?.create(officeTilemap, gridEngineConfig);
   }
 
-  public update(_time: number, delta: number) {
-    this.gridControls?.update();
-    this.gridPhysics?.update(delta);
-  }
-
-  private createPlayerAnimation(
-    name: string,
-    startFrame: number,
-    endFrame: number
-  ) {
-    this.anims.create({
-      key: name,
-      frames: this.anims.generateFrameNumbers('player', {
-        start: startFrame,
-        end: endFrame,
-      }),
-      frameRate: 10,
-      repeat: -1,
-      yoyo: true,
-    });
+  public update(_time: number) {
+    const cursors = this.input.keyboard.createCursorKeys();
+    if (cursors.left.isDown) {
+      this.gridEngine?.move('player', Direction.LEFT);
+    } else if (cursors.right.isDown) {
+      this.gridEngine?.move('player', Direction.RIGHT);
+    } else if (cursors.up.isDown) {
+      this.gridEngine?.move('player', Direction.UP);
+    } else if (cursors.down.isDown) {
+      this.gridEngine?.move('player', Direction.DOWN);
+    }
   }
 }

@@ -1,3 +1,4 @@
+import { GridEngine } from 'grid-engine';
 import Phaser from 'phaser';
 
 const CANVAS_WIDTH = 800;
@@ -18,6 +19,15 @@ const configuration: Phaser.Types.Core.GameConfig = {
       gravity: { y: 0 },
       debug: false,
     },
+  },
+  plugins: {
+    scene: [
+      {
+        key: 'gridEngine',
+        plugin: GridEngine,
+        mapping: 'gridEngine',
+      },
+    ],
   },
 };
 
