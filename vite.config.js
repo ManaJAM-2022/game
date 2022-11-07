@@ -2,6 +2,7 @@ import replace from '@rollup/plugin-replace';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  base: process.env.GITHUB_PAGES ? '/game' : '/',
   build: {
     rollupOptions: {
       plugins: [
