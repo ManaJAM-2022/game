@@ -79,7 +79,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.gridEngine?.create(officeTilemap, gridEngineConfig);
 
-    const music = this.sound.add('route1', { loop: true });
+    const music = this.sound.add('route1', { loop: true, volume: 0.1 });
     music.play();
   }
 
