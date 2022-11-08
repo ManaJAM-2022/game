@@ -6,13 +6,27 @@ const tilesetKey: string = 'base_tiles';
 // The name of the tileset in Tiled
 const tilesetName: string = 'Room';
 
+const MAP: Record<string, string> = {
+  'office-map': 'maps/office.json',
+};
+
+const MUSIC: Record<string, string[]> = {
+  'office-map': ['audio/route1.mp3'],
+};
+
+/**
+ * A game / playable scene, this scene would have a player that moves around a map.
+ */
 export default class GameScene extends Phaser.Scene {
   private static readonly SCALE = 2;
   static readonly TILE_SIZE = this.SCALE * 16;
   private gridEngine?: GridEngine;
 
-  constructor() {
-    super('GameScene');
+  private mapName: string;
+
+  constructor(sceneKey: string, tileMap: string) {
+    super(sceneKey);
+    this.mapName = tileMap;
   }
 
   preload() {
@@ -20,9 +34,6 @@ export default class GameScene extends Phaser.Scene {
       tilesetKey,
       'assets/1_Room_Builder_Office/Room_Builder_Office_16x16.png'
     );
-
-    this.load.tilemapTiledJSON('office-map', 'maps/office.json');
-
     this.load.spritesheet(
       'player',
       'assets/Characters_free/Adam_run_16x16.png',
@@ -32,12 +43,13 @@ export default class GameScene extends Phaser.Scene {
       }
     );
 
-    this.load.audio('route1', ['audio/route1.mp3']);
+    this.load.tilemapTiledJSON(this.mapName, MAP[this.mapName]);
+    this.load.audio(`${this.mapName}_Ambience`, MUSIC[this.mapName]);
   }
 
   create() {
     // Map
-    const officeTilemap = this.make.tilemap({ key: 'office-map' });
+    const officeTilemap = this.make.tilemap({ key: this.mapName });
     officeTilemap.addTilesetImage(tilesetName, tilesetKey);
 
     for (let i = 0; i < officeTilemap.layers.length; i++) {
@@ -71,20 +83,56 @@ export default class GameScene extends Phaser.Scene {
 
     this.gridEngine?.create(officeTilemap, gridEngineConfig);
 
-    const music = this.sound.add('route1', { loop: true });
+    const music = this.sound.add(`${this.mapName}_Ambience`, { loop: true });
     music.play();
   }
 
   public update(_time: number) {
+    const moveDirection = this.getMoveDirection();
+    this.gridEngine?.move('player', moveDirection);
+  }
+
+  private getMoveDirection() {
     const cursors = this.input.keyboard.createCursorKeys();
-    if (cursors.left.isDown) {
-      this.gridEngine?.move('player', Direction.LEFT);
-    } else if (cursors.right.isDown) {
-      this.gridEngine?.move('player', Direction.RIGHT);
-    } else if (cursors.up.isDown) {
-      this.gridEngine?.move('player', Direction.UP);
-    } else if (cursors.down.isDown) {
-      this.gridEngine?.move('player', Direction.DOWN);
+    const wasd: Record<any, { isDown: boolean }> = this.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D,
+    }) as any;
+
+    const up = cursors.up.isDown || wasd.up.isDown;
+    const down = cursors.down.isDown || wasd.down.isDown;
+    const left = cursors.left.isDown || wasd.left.isDown;
+    const right = cursors.right.isDown || wasd.right.isDown;
+
+    if (up && !down && !left && !right) {
+      return Direction.UP;
     }
+    if (!up && down && !left && !right) {
+      return Direction.DOWN;
+    }
+    if (!up && !down && left && !right) {
+      return Direction.LEFT;
+    }
+    if (!up && !down && !left && right) {
+      return Direction.RIGHT;
+    }
+
+    // Support diagonal movement
+    if (up && !down && left && !right) {
+      return Direction.UP_LEFT;
+    }
+    if (up && !down && !left && right) {
+      return Direction.UP_RIGHT;
+    }
+    if (!up && down && left && !right) {
+      return Direction.DOWN_LEFT;
+    }
+    if (!up && down && !left && right) {
+      return Direction.DOWN_RIGHT;
+    }
+
+    return Direction.NONE;
   }
 }
