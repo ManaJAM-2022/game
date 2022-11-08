@@ -1,4 +1,4 @@
-import { Direction, GridEngine, GridEngineConfig } from 'grid-engine';
+import { Direction, GridEngine, GridEngineConfig, Position } from 'grid-engine';
 import Phaser from 'phaser';
 
 const roomTilesetKey: string = 'base_tiles';
@@ -73,6 +73,7 @@ export default class GameScene extends Phaser.Scene {
             down: { leftFoot: 19, standing: 20, rightFoot: 22 },
           },
           startPosition: { x: 8, y: 8 },
+          labels: [ 'hero' ]
         },
       ],
     };
@@ -81,6 +82,19 @@ export default class GameScene extends Phaser.Scene {
 
     const music = this.sound.add('route1', { loop: true, volume: 0.1 });
     music.play();
+
+    const spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+    spaceBar.on('down', () => {
+      const facingPosition = this.gridEngine?.getFacingPosition('player')!;
+
+      const facingTile = officeTilemap.getTileAt(facingPosition.x, facingPosition.y, true, 2);
+      console.log(facingPosition);
+      console.log(facingTile);
+      if (facingTile && facingTile.properties['interactable']) {
+        console.log('Interacting');
+      }
+    });
   }
 
   public update(_time: number) {
