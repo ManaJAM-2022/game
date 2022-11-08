@@ -1,10 +1,12 @@
 import { Direction, GridEngine, GridEngineConfig } from 'grid-engine';
 import Phaser from 'phaser';
 
-const tilesetKey: string = 'base_tiles';
+const roomTilesetKey: string = 'base_tiles';
+const officeTilesetKey: string = 'office_tiles';
 
 // The name of the tileset in Tiled
-const tilesetName: string = 'Room';
+const roomTilesetName: string = 'Room';
+const officeTilesetName: string = 'Office';
 
 export default class GameScene extends Phaser.Scene {
   private static readonly SCALE = 2;
@@ -17,8 +19,13 @@ export default class GameScene extends Phaser.Scene {
 
   preload() {
     this.load.image(
-      tilesetKey,
+      roomTilesetKey,
       'assets/1_Room_Builder_Office/Room_Builder_Office_16x16.png'
+    );
+
+    this.load.image(
+      officeTilesetKey,
+      'assets/3_Modern_Office_Shadowless/Modern_Office_Shadowless_16x16.png'
     );
 
     this.load.tilemapTiledJSON('office-map', 'maps/office.json');
@@ -38,10 +45,11 @@ export default class GameScene extends Phaser.Scene {
   create() {
     // Map
     const officeTilemap = this.make.tilemap({ key: 'office-map' });
-    officeTilemap.addTilesetImage(tilesetName, tilesetKey);
+    officeTilemap.addTilesetImage(roomTilesetName, roomTilesetKey);
+    officeTilemap.addTilesetImage(officeTilesetName, officeTilesetKey);
 
     for (let i = 0; i < officeTilemap.layers.length; i++) {
-      const layer = officeTilemap.createLayer(i, tilesetName, 0, 0);
+      const layer = officeTilemap.createLayer(i, [roomTilesetName, officeTilesetName], 0, 0);
       layer.setDepth(i);
       layer.scale = GameScene.SCALE;
     }
