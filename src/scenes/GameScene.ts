@@ -92,7 +92,7 @@ export default class GameScene extends Phaser.Scene {
       console.log(facingPosition);
       console.log(facingTile);
       if (facingTile && facingTile.properties['interactable']) {
-        console.log('Interacting');
+        alert('Interacting');
       }
     });
   }
