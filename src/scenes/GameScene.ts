@@ -19,7 +19,7 @@ const MUSIC: Record<string, string[]> = {
 /**
  * A game / playable scene, this scene would have a player that moves around a map.
  */
-export default class GameScene extends Phaser.Scene {
+export default abstract class GameScene extends Phaser.Scene {
   private static readonly SCALE = 2;
   static readonly TILE_SIZE = this.SCALE * 16;
   private gridEngine?: GridEngine;
