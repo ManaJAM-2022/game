@@ -6,12 +6,20 @@ export default class WelcomeScene extends Phaser.Scene {
   }
 
   create() {
-    const logo = this.add.text(325, 70, 'Welcome');
-    const helpText = this.add.text(275, 400, 'Click to continue');
+    
+    const screenCenterX =
+      this.cameras.main.worldView.x + this.cameras.main.width / 2;
+    const screenCenterY =
+      this.cameras.main.worldView.y + this.cameras.main.height / 2;
+
+    const logo = this.add
+      .text(screenCenterX, 70, 'Diary of an intern')
+      .setOrigin(0.5);
+    this.add.text(screenCenterX, 400, 'Click to continue').setOrigin(0.5);
 
     this.tweens.add({
       targets: logo,
-      y: 325,
+      y: screenCenterY,
       duration: 1500,
       ease: 'Sine.inOut',
       yoyo: true,

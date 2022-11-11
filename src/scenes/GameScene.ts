@@ -25,15 +25,17 @@ const MUSIC: Record<string, string[]> = {
  * A game / playable scene, this scene would have a player that moves around a map.
  */
 export default abstract class GameScene extends Phaser.Scene {
-  private static readonly SCALE = 2;
-  static readonly TILE_SIZE = this.SCALE * 16;
-  private gridEngine?: GridEngine;
+  public static readonly SCALE = 2;
+  public readonly TILE_SIZE = GameScene.SCALE * 16;
+
+  protected tilemap: any;
+  protected gridEngine: GridEngine;
 
   private mapName: string;
 
-  constructor(sceneKey: string, tileMap: string) {
+  constructor(sceneKey: string, mapName: string) {
     super(sceneKey);
-    this.mapName = tileMap;
+    this.mapName = mapName;
   }
 
   preload() {
@@ -47,16 +49,18 @@ export default abstract class GameScene extends Phaser.Scene {
 
     this.load.tilemapTiledJSON(this.mapName, MAP[this.mapName]);
     this.load.audio(`${this.mapName}_Ambience`, MUSIC[this.mapName]);
+
+    // Load plugins
   }
 
   create() {
     // Map
-    const officeTilemap = this.make.tilemap({ key: this.mapName });
-    officeTilemap.addTilesetImage(roomTilesetName, roomTilesetKey);
-    officeTilemap.addTilesetImage(officeTilesetName, officeTilesetKey);
+    this.tilemap = this.make.tilemap({ key: this.mapName });
+    this.tilemap.addTilesetImage(roomTilesetName, roomTilesetKey);
+    this.tilemap.addTilesetImage(officeTilesetName, officeTilesetKey);
 
-    for (let i = 0; i < officeTilemap.layers.length; i++) {
-      const layer = officeTilemap.createLayer(
+    for (let i = 0; i < this.tilemap.layers.length; i++) {
+      const layer = this.tilemap.createLayer(
         i,
         [roomTilesetName, officeTilesetName],
         0,
@@ -68,10 +72,13 @@ export default abstract class GameScene extends Phaser.Scene {
 
     // Player
     const playerSprite = this.add.sprite(0, 0, 'player');
-    playerSprite.setDepth(5);
+    // playerSprite.setDepth(5);
     playerSprite.scale = GameScene.SCALE;
     this.cameras.main.startFollow(playerSprite);
-    this.cameras.main.roundPixels = true;
+    this.cameras.main.setFollowOffset(
+      -playerSprite.width,
+      -playerSprite.height
+    );
 
     const gridEngineConfig: GridEngineConfig = {
       characters: [
@@ -90,7 +97,7 @@ export default abstract class GameScene extends Phaser.Scene {
       ],
     };
 
-    this.gridEngine?.create(officeTilemap, gridEngineConfig);
+    this.gridEngine.create(this.tilemap, gridEngineConfig);
 
     const music = this.sound.add(`${this.mapName}_Ambience`, {
       loop: true,
@@ -103,18 +110,12 @@ export default abstract class GameScene extends Phaser.Scene {
     );
 
     spaceBar.on('down', () => {
-      const facingPosition = this.gridEngine?.getFacingPosition('player')!;
-
-      const facingTile = officeTilemap.getTileAt(
-        facingPosition.x,
-        facingPosition.y,
-        true,
-        2
-      );
-      console.log(facingPosition);
-      console.log(facingTile);
-      if (facingTile && facingTile.properties['interactable']) {
-        alert('Interacting');
+      const interactable = this.getInteractable('player')!;
+      if (interactable) {
+        if (typeof interactable === 'string') {
+          alert(`${interactable}: Hi... keeping busy?`);
+        }
+        console.log({ interactable });
       }
     });
   }
@@ -122,6 +123,46 @@ export default abstract class GameScene extends Phaser.Scene {
   public update(_time: number) {
     const moveDirection = this.getMoveDirection();
     this.gridEngine?.move('player', moveDirection);
+  }
+
+  protected getInteractable(charId: string) {
+    const facingPosition = this.gridEngine?.getFacingPosition(charId);
+    const npc = this.gridEngine.getCharactersAt(
+      facingPosition,
+      this.gridEngine.getCharLayer(charId) ?? 'undefined'
+    );
+    if (npc.length > 0) {
+      if (npc[0] === charId) {
+        return npc[1];
+      }
+      return npc[0];
+    }
+    const facingTile = this.tilemap.getTileAt(
+      facingPosition.x,
+      facingPosition.y,
+      true,
+      2
+    );
+    if (facingTile && facingTile.properties['interactable']) {
+      return facingTile;
+    }
+    return null;
+  }
+
+  protected createNPC(
+    label: string,
+    startPosition: Position
+  ): { id: string; sprite: Phaser.GameObjects.Sprite } {
+    const npc = this.add.sprite(0, 0, label);
+    npc.scale = GameScene.SCALE;
+
+    this.gridEngine.addCharacter({
+      id: label,
+      sprite: npc,
+      startPosition,
+    });
+
+    return { id: label, sprite: npc };
   }
 
   private getMoveDirection() {
@@ -149,20 +190,6 @@ export default abstract class GameScene extends Phaser.Scene {
     }
     if (!up && !down && !left && right) {
       return Direction.RIGHT;
-    }
-
-    // Support diagonal movement
-    if (up && !down && left && !right) {
-      return Direction.UP_LEFT;
-    }
-    if (up && !down && !left && right) {
-      return Direction.UP_RIGHT;
-    }
-    if (!up && down && left && !right) {
-      return Direction.DOWN_LEFT;
-    }
-    if (!up && down && !left && right) {
-      return Direction.DOWN_RIGHT;
     }
 
     return Direction.NONE;
