@@ -118,6 +118,8 @@ export default abstract class GameScene extends Phaser.Scene {
         console.log({ interactable });
       }
     });
+    
+    this.cameras.main.fadeIn(1000);
   }
 
   public update(_time: number) {
