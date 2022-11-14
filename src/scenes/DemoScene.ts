@@ -21,11 +21,11 @@ export default class DemoScene extends GameScene {
   create() {
     super.create();
     const npc = this.createNPC('npc1', { x: 5, y: 5 });
-    this.gridEngine.moveRandomly(npc.id, getRandomInt(1000, 3500));
+    this.gridEngine!.moveRandomly(npc.id, getRandomInt(1000, 3500));
 
     const npc2 = this.createNPC('npc2', { x: 10, y: 10 });
-    this.gridEngine.follow(npc2.id, 'player', 2, true);
-    this.gridEngine.moveRandomly(npc.id, getRandomInt(50, 1500));
+    this.gridEngine!.follow(npc2.id, 'player', 2, true);
+    this.gridEngine!.moveRandomly(npc.id, getRandomInt(50, 1500));
   }
 }
 
